@@ -1,4 +1,5 @@
 import { OmitStrict } from "./utils/index.js";
+import { TSV } from "./types/index.js";
 
 type TSVString = "string";
 type TSVNumber = "number";
