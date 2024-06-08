@@ -5,10 +5,13 @@ export namespace TSV {
 
   export type Type = TypeObject | TypeString | TypeNumber;
 
-  export type Schema<T extends Type> = T extends TypeObject
+  export type Schema<
+    T extends Type,
+    C extends Record<string, Schema<Type>> = {}
+  > = T extends TypeObject
     ? {
         _type: T;
-        children: Record<string, Schema<Type>>;
+        children: C;
       }
     : {
         _type: T;
@@ -20,41 +23,36 @@ export namespace TSV {
       : T extends TypeNumber
       ? number
       : T extends TypeObject
-      ? S extends Schema<TypeObject>
-        ? { [K in keyof S["children"]]: Infer<S["children"][K]> }
+      ? S extends Schema<TypeObject, infer Children>
+        ? {
+            [K in keyof Children & string]: Infer<Children[K]>;
+          }
         : never
       : never
     : never;
 
-  export const String = (): Schema<TypeString> => {
-    return {
-      _type: "string",
-    };
+  export const String: Schema<TypeString> = {
+    _type: "string",
   };
 
-  export const Number = (): Schema<TypeNumber> => {
-    return {
-      _type: "number",
-    };
+  export const Number: Schema<TypeNumber> = {
+    _type: "number",
   };
 
-  export const Object = <S extends Schema<TypeObject>>(
-    children: S["children"]
-  ): Schema<TypeObject> => {
-    return {
-      _type: "object",
-      children,
-    };
-  };
-
-  export type KeysChildren<S extends Schema<TypeObject>> = {
-    [K in keyof S["children"]]: string;
-  };
+  export const Construct = <S extends Record<string, Schema<Type>>>(
+    children: S
+  ): Schema<TypeObject, S> => ({
+    _type: "object",
+    children,
+  });
 }
 
-const user = TSV.Object({
-  id: TSV.Number(),
-  name: TSV.String(),
+const user = TSV.Construct({
+  id: TSV.Number,
+  name: TSV.String,
+  location: TSV.Construct({
+    address_1: TSV.String,
+  }),
 });
 
-type UserType = typeof user;
+type User = TSV.Infer<typeof user>;
