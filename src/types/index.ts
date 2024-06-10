@@ -177,7 +177,22 @@ export namespace TSV {
    * Infer Type
    */
 
+  export type InferValue<S extends Schema<Type>> = S extends StringSchema
+    ? string
+    : S extends NumberSchema
+    ? number
+    : S extends BooleanSchema
+    ? boolean
+    : never;
+
   export type Infer<S extends Schema<Type> | OptionalSchema<Type>> =
+    PrettifyInferObject<BaseInfer<S>>;
+
+  export type PrettifyInferObject<O> = {
+    [K in keyof O]: O[K];
+  } & {};
+
+  export type BaseInfer<S extends Schema<Type> | OptionalSchema<Type>> =
     S extends StringSchema
       ? string
       : S extends NumberSchema
@@ -185,9 +200,17 @@ export namespace TSV {
       : S extends BooleanSchema
       ? boolean
       : S extends ObjectSchema<infer C>
-      ? {
-          [K in keyof C]: Infer<C[K]>;
-        }
+      ? PrettifyInferObject<
+          {
+            [K in keyof C as C[K] extends OptionalSchema<infer T>
+              ? never
+              : K]: BaseInfer<C[K]>;
+          } & {
+            [K in keyof C as C[K] extends OptionalSchema<infer T>
+              ? K
+              : never]?: BaseInfer<C[K]>;
+          }
+        >
       : S extends OptionalSchema<infer T, infer C>
       ? T extends TypeString
         ? string | undefined
@@ -197,21 +220,32 @@ export namespace TSV {
         ? boolean | undefined
         : T extends TypeObject
         ?
-            | {
-                [K in keyof C]: Infer<C[K]>;
-              }
+            | PrettifyInferObject<
+                {
+                  [K in keyof C as C[K] extends OptionalSchema<infer T>
+                    ? never
+                    : K]: BaseInfer<C[K]>;
+                } & {
+                  [K in keyof C as C[K] extends OptionalSchema<infer T>
+                    ? K
+                    : never]?: BaseInfer<C[K]>;
+                }
+              >
             | undefined
         : never
       : never;
 }
 
-const user = TSV.Construct({
+const userSchema = TSV.Construct({
   id: TSV.Number(),
   first_name: TSV.String().Optional(),
+  location: TSV.Construct({
+    postal_code: TSV.Number().Optional(),
+    road: TSV.String(),
+    address_1: TSV.Construct({
+      city: TSV.String().Optional(),
+    }).Optional(),
+  }).Optional(),
 });
 
-type User = TSV.Infer<typeof user>;
-
-const test: User = {
-  id: 1,
-};
+type User = TSV.Infer<typeof userSchema>;
