@@ -255,28 +255,28 @@ export namespace TSV {
               : never]?: BaseInfer<C[K]>;
           }
         > | null
-      : S extends OptionalSchema<infer SC>
-      ? SC extends StringSchema
-        ? string | undefined
-        : SC extends NumberSchema
-        ? number | undefined
-        : SC extends BooleanSchema
-        ? boolean | undefined
-        : SC extends ObjectSchema<infer C>
-        ?
-            | PrettifyInferObject<
-                {
-                  [K in keyof C as C[K] extends OptionalSchema<infer T>
-                    ? never
-                    : K]: BaseInfer<C[K]>;
-                } & {
-                  [K in keyof C as C[K] extends OptionalSchema<infer T>
-                    ? K
-                    : never]?: BaseInfer<C[K]>;
-                }
-              >
-            | undefined
-        : never
+      : never
+    : S extends OptionalSchema<infer SC>
+    ? SC extends StringSchema
+      ? string | undefined
+      : SC extends NumberSchema
+      ? number | undefined
+      : SC extends BooleanSchema
+      ? boolean | undefined
+      : SC extends ObjectSchema<infer C>
+      ?
+          | PrettifyInferObject<
+              {
+                [K in keyof C as C[K] extends OptionalSchema<infer T>
+                  ? never
+                  : K]: BaseInfer<C[K]>;
+              } & {
+                [K in keyof C as C[K] extends OptionalSchema<infer T>
+                  ? K
+                  : never]?: BaseInfer<C[K]>;
+              }
+            >
+          | undefined
       : never
     : never;
 }

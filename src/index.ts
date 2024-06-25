@@ -1,27 +1,5 @@
-# TS Validation - Zod Clone
+import { TSV } from "./types/index";
 
-Building Zod from zero to improve my expertise in TypeScript
-
-## Completed
-
-- [x] String (w/ only Optional & Nullable)
-- [x] Boolean (w/ only Optional & Nullable)
-- [x] Number (w/ only Optional & Nullable)
-- [x] Object (w/ Optional & Nullable)
-- [x] Nullable
-- [x] Optional
-- [x] Infer (String, Boolean, Number, Object, Optional, Nullable)
-
-## Todo
-
-- [ ] Parse
-- [ ] Array
-- [ ] Min / Max / Length
-- [ ] Refactoring Infer Type
-
-### Example
-
-```ts
 /**
  * Définition du schéma de l'utilisateur
  */
@@ -58,8 +36,3 @@ type DemoUser = TSV.Infer<typeof demoUserSchema>;
  * }
  *
  */
-```
-
-### Inspired by
-
-- [Zod](https://zod.dev/)
