@@ -9,13 +9,15 @@ export namespace TSV {
   export type TypeObject = "object";
 
   export type TypeOptional = "optional";
+  export type TypeNullable = "nullable";
 
   export type Type =
     | TypeString
     | TypeNumber
     | TypeBoolean
     | TypeObject
-    | TypeOptional;
+    | TypeOptional
+    | TypeNullable;
 
   /**
    * Base
@@ -26,20 +28,36 @@ export namespace TSV {
   };
 
   /**
+   * Nullable
+   */
+
+  export type NullableSchema<
+    S extends PrimitiveSchema<Type, C>,
+    C extends ChildrenObjectSchema = {}
+  > = BaseSchema<TypeNullable> & {
+    child: S;
+  };
+
+  export type NullableMethod<
+    T extends Type,
+    C extends ChildrenObjectSchema = {}
+  > = () => NullableSchema<PrimitiveSchema<T, C>>;
+
+  /**
    * Optional
    */
 
   export type OptionalSchema<
-    T extends Type,
+    S extends PrimitiveSchema<Type, C>,
     C extends ChildrenObjectSchema = {}
   > = BaseSchema<TypeOptional> & {
-    child: Omit<Schema<T, C>, "Optional">;
+    child: S;
   };
 
   export type OptionalMethod<
     T extends Type,
     C extends ChildrenObjectSchema = {}
-  > = () => OptionalSchema<T, C>;
+  > = () => OptionalSchema<PrimitiveSchema<T, C>>;
 
   /**
    * String
@@ -47,6 +65,7 @@ export namespace TSV {
 
   export type StringSchema = BaseSchema<TypeString> & {
     Optional: OptionalMethod<TypeString>;
+    Nullable: NullableMethod<TypeString>;
   };
 
   /**
@@ -55,6 +74,7 @@ export namespace TSV {
 
   export type NumberSchema = BaseSchema<TypeNumber> & {
     Optional: OptionalMethod<TypeNumber>;
+    Nullable: NullableMethod<TypeNumber>;
   };
 
   /**
@@ -63,6 +83,7 @@ export namespace TSV {
 
   export type BooleanSchema = BaseSchema<TypeBoolean> & {
     Optional: OptionalMethod<TypeBoolean>;
+    Nullable: NullableMethod<TypeBoolean>;
   };
 
   /**
@@ -71,12 +92,13 @@ export namespace TSV {
 
   export type ChildrenObjectSchema = Record<
     string,
-    Schema<Type> | OptionalSchema<Type>
+    PrimitiveSchema<Type> | OptionalSchema<PrimitiveSchema<Type>>
   >;
 
   export type ObjectSchema<C extends ChildrenObjectSchema> =
     BaseSchema<TypeObject> & {
       Optional: OptionalMethod<TypeObject, C>;
+      Nullable: NullableMethod<TypeObject, C>;
       children: C;
     };
 
@@ -84,7 +106,7 @@ export namespace TSV {
    * Schema
    */
 
-  export type Schema<
+  export type PrimitiveSchema<
     T extends Type,
     C extends ChildrenObjectSchema = {}
   > = T extends TypeString
@@ -98,12 +120,25 @@ export namespace TSV {
     : never;
 
   /**
+   *  Nullable Function
+   */
+
+  export const Nullable = <S extends PrimitiveSchema<Type>>(
+    schema: S
+  ): NullableSchema<S> => {
+    return {
+      _type: "nullable",
+      child: schema,
+    };
+  };
+
+  /**
    * Optional Function
    */
 
-  export const Optional = <T extends Type>(
-    schema: Schema<T>
-  ): OptionalSchema<T> => {
+  export const Optional = <S extends PrimitiveSchema<Type>>(
+    schema: S
+  ): OptionalSchema<S> => {
     return {
       _type: "optional",
       child: schema,
@@ -118,6 +153,7 @@ export namespace TSV {
     return {
       _type: "string",
       Optional: () => Optional(String()),
+      Nullable: () => Nullable(String()),
     };
   };
 
@@ -129,6 +165,7 @@ export namespace TSV {
     return {
       _type: "number",
       Optional: () => Optional(Number()),
+      Nullable: () => Nullable(Number()),
     };
   };
 
@@ -140,6 +177,7 @@ export namespace TSV {
     return {
       _type: "boolean",
       Optional: () => Optional(Boolean()),
+      Nullable: () => Nullable(Boolean()),
     };
   };
 
@@ -149,19 +187,12 @@ export namespace TSV {
 
   export const Construct = <C extends ChildrenObjectSchema>(
     children: C
-  ): Schema<TypeObject, C> => {
+  ): PrimitiveSchema<TypeObject, C> => {
     return {
       _type: "object",
       children,
-      Optional: () => {
-        return {
-          _type: "optional",
-          child: {
-            _type: "object",
-            children,
-          },
-        };
-      },
+      Optional: () => Optional(Construct(children)),
+      Nullable: () => Nullable(Construct(children)),
     };
   };
 
@@ -169,78 +200,90 @@ export namespace TSV {
    * Infer Type
    */
 
-  export type InferValue<S extends Schema<Type>> = S extends StringSchema
-    ? string
-    : S extends NumberSchema
-    ? number
-    : S extends BooleanSchema
-    ? boolean
-    : never;
-
-  export type Infer<S extends Schema<Type> | OptionalSchema<Type>> =
-    PrettifyInferObject<BaseInfer<S>>;
-
-  export type PrettifyInferObject<O> = {
-    [K in keyof O]: O[K];
-  } & {};
-
-  export type BaseInfer<S extends Schema<Type> | OptionalSchema<Type>> =
+  export type InferValue<S extends PrimitiveSchema<Type>> =
     S extends StringSchema
       ? string
       : S extends NumberSchema
       ? number
       : S extends BooleanSchema
       ? boolean
-      : S extends ObjectSchema<infer C>
-      ? PrettifyInferObject<
-          {
-            [K in keyof C as C[K] extends OptionalSchema<infer T>
-              ? never
-              : K]: BaseInfer<C[K]>;
-          } & {
-            [K in keyof C as C[K] extends OptionalSchema<infer T>
-              ? K
-              : never]?: BaseInfer<C[K]>;
-          }
-        >
-      : S extends OptionalSchema<infer T, infer C>
-      ? T extends TypeString
-        ? string | undefined
-        : T extends TypeNumber
-        ? number | undefined
-        : T extends TypeBoolean
-        ? boolean | undefined
-        : T extends TypeObject
-        ?
-            | PrettifyInferObject<
-                {
-                  [K in keyof C as C[K] extends OptionalSchema<infer T>
-                    ? never
-                    : K]: BaseInfer<C[K]>;
-                } & {
-                  [K in keyof C as C[K] extends OptionalSchema<infer T>
-                    ? K
-                    : never]?: BaseInfer<C[K]>;
-                }
-              >
-            | undefined
-        : never
       : never;
+
+  export type Infer<
+    S extends
+      | PrimitiveSchema<Type>
+      | OptionalSchema<PrimitiveSchema<Type>>
+      | NullableSchema<PrimitiveSchema<Type>>
+  > = PrettifyInferObject<BaseInfer<S>>;
+
+  export type PrettifyInferObject<O> = {
+    [K in keyof O]: O[K];
+  } & {};
+
+  export type BaseInfer<
+    S extends
+      | PrimitiveSchema<Type>
+      | OptionalSchema<PrimitiveSchema<Type>>
+      | NullableSchema<PrimitiveSchema<Type>>
+  > = S extends StringSchema
+    ? string
+    : S extends NumberSchema
+    ? number
+    : S extends BooleanSchema
+    ? boolean
+    : S extends ObjectSchema<infer C>
+    ? PrettifyInferObject<
+        {
+          [K in keyof C as C[K] extends OptionalSchema<infer T>
+            ? never
+            : K]: BaseInfer<C[K]>;
+        } & {
+          [K in keyof C as C[K] extends OptionalSchema<infer T>
+            ? K
+            : never]?: BaseInfer<C[K]>;
+        }
+      >
+    : S extends OptionalSchema<infer SC>
+    ? SC extends StringSchema
+      ? string | undefined
+      : SC extends NumberSchema
+      ? number | undefined
+      : SC extends BooleanSchema
+      ? boolean | undefined
+      : SC extends ObjectSchema<infer C>
+      ?
+          | PrettifyInferObject<
+              {
+                [K in keyof C as C[K] extends OptionalSchema<infer T>
+                  ? never
+                  : K]: BaseInfer<C[K]>;
+              } & {
+                [K in keyof C as C[K] extends OptionalSchema<infer T>
+                  ? K
+                  : never]?: BaseInfer<C[K]>;
+              }
+            >
+          | undefined
+      : never
+    : never;
 }
 
-const userSchema = TSV.Construct({
-  id: TSV.Number(),
-  first_name: TSV.String().Optional(),
-  location: TSV.Construct({
-    postal_code: TSV.Number().Optional(),
-    road: TSV.String(),
-    address_1: TSV.Construct({
+const stringOptionalSchema = TSV.String().Optional();
+const optionalStringSchema = TSV.Optional(TSV.String());
+
+const nullableSchema = TSV.Nullable(TSV.String());
+const stringNullableSchema = TSV.String().Nullable();
+
+const objectSchema = TSV.Construct({
+  name: TSV.Optional(TSV.String()),
+  age: TSV.Number(),
+  adress: TSV.Optional(
+    TSV.Construct({
+      street: TSV.String(),
+      number: TSV.Number(),
       city: TSV.String().Optional(),
-    }).Optional(),
-  }).Optional(),
+    })
+  ),
 });
 
-const testSchema = TSV.Optional(TSV.String());
-type Test = TSV.Infer<typeof testSchema>;
-
-type User = TSV.Infer<typeof userSchema>;
+type StringOptional = TSV.Infer<typeof objectSchema>;
