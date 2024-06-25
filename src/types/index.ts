@@ -92,7 +92,9 @@ export namespace TSV {
 
   export type ChildrenObjectSchema = Record<
     string,
-    PrimitiveSchema<Type> | OptionalSchema<PrimitiveSchema<Type>>
+    | PrimitiveSchema<Type>
+    | OptionalSchema<PrimitiveSchema<Type>>
+    | NullableSchema<PrimitiveSchema<Type>>
   >;
 
   export type ObjectSchema<C extends ChildrenObjectSchema> =
@@ -243,47 +245,56 @@ export namespace TSV {
             : never]?: BaseInfer<C[K]>;
         }
       >
-    : S extends OptionalSchema<infer SC>
+    : S extends NullableSchema<infer SC>
     ? SC extends StringSchema
-      ? string | undefined
+      ? string | null
       : SC extends NumberSchema
-      ? number | undefined
+      ? number | null
       : SC extends BooleanSchema
-      ? boolean | undefined
+      ? boolean | null
       : SC extends ObjectSchema<infer C>
-      ?
-          | PrettifyInferObject<
-              {
-                [K in keyof C as C[K] extends OptionalSchema<infer T>
-                  ? never
-                  : K]: BaseInfer<C[K]>;
-              } & {
-                [K in keyof C as C[K] extends OptionalSchema<infer T>
-                  ? K
-                  : never]?: BaseInfer<C[K]>;
-              }
-            >
-          | undefined
+      ? PrettifyInferObject<
+          {
+            [K in keyof C as C[K] extends OptionalSchema<infer T>
+              ? never
+              : K]: BaseInfer<C[K]>;
+          } & {
+            [K in keyof C as C[K] extends OptionalSchema<infer T>
+              ? K
+              : never]?: BaseInfer<C[K]>;
+          }
+        > | null
+      : S extends OptionalSchema<infer SC>
+      ? SC extends StringSchema
+        ? string | undefined
+        : SC extends NumberSchema
+        ? number | undefined
+        : SC extends BooleanSchema
+        ? boolean | undefined
+        : SC extends ObjectSchema<infer C>
+        ?
+            | PrettifyInferObject<
+                {
+                  [K in keyof C as C[K] extends OptionalSchema<infer T>
+                    ? never
+                    : K]: BaseInfer<C[K]>;
+                } & {
+                  [K in keyof C as C[K] extends OptionalSchema<infer T>
+                    ? K
+                    : never]?: BaseInfer<C[K]>;
+                }
+              >
+            | undefined
+        : never
       : never
     : never;
 }
 
-const stringOptionalSchema = TSV.String().Optional();
-const optionalStringSchema = TSV.Optional(TSV.String());
+const nullableStringSchema = TSV.Nullable(
+  TSV.Construct({
+    name: TSV.String(),
+    age: TSV.Nullable(TSV.Number()),
+  })
+);
 
-const nullableSchema = TSV.Nullable(TSV.String());
-const stringNullableSchema = TSV.String().Nullable();
-
-const objectSchema = TSV.Construct({
-  name: TSV.Optional(TSV.String()),
-  age: TSV.Number(),
-  adress: TSV.Optional(
-    TSV.Construct({
-      street: TSV.String(),
-      number: TSV.Number(),
-      city: TSV.String().Optional(),
-    })
-  ),
-});
-
-type StringOptional = TSV.Infer<typeof objectSchema>;
+type StringNullable = TSV.Infer<typeof nullableStringSchema>;
