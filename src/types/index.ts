@@ -202,15 +202,6 @@ export namespace TSV {
    * Infer Type
    */
 
-  export type InferValue<S extends PrimitiveSchema<Type>> =
-    S extends StringSchema
-      ? string
-      : S extends NumberSchema
-      ? number
-      : S extends BooleanSchema
-      ? boolean
-      : never;
-
   export type Infer<
     S extends
       | PrimitiveSchema<Type>
