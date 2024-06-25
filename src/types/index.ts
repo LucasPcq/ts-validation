@@ -98,20 +98,26 @@ export namespace TSV {
     : never;
 
   /**
+   * Optional Function
+   */
+
+  export const Optional = <T extends Type>(
+    schema: Schema<T>
+  ): OptionalSchema<T> => {
+    return {
+      _type: "optional",
+      child: schema,
+    };
+  };
+
+  /**
    * String Function
    */
 
-  export const String = (): Schema<TypeString> => {
+  export const String = (): StringSchema => {
     return {
       _type: "string",
-      Optional: () => {
-        return {
-          _type: "optional",
-          child: {
-            _type: "string",
-          },
-        };
-      },
+      Optional: () => Optional(String()),
     };
   };
 
@@ -119,17 +125,10 @@ export namespace TSV {
    * Number Function
    */
 
-  export const Number = (): Schema<TypeNumber> => {
+  export const Number = (): NumberSchema => {
     return {
       _type: "number",
-      Optional: () => {
-        return {
-          _type: "optional",
-          child: {
-            _type: "number",
-          },
-        };
-      },
+      Optional: () => Optional(Number()),
     };
   };
 
@@ -137,17 +136,10 @@ export namespace TSV {
    * Boolean Function
    */
 
-  export const Boolean = (): Schema<TypeBoolean> => {
+  export const Boolean = (): BooleanSchema => {
     return {
       _type: "boolean",
-      Optional: () => {
-        return {
-          _type: "optional",
-          child: {
-            _type: "boolean",
-          },
-        };
-      },
+      Optional: () => Optional(Boolean()),
     };
   };
 
@@ -247,5 +239,8 @@ const userSchema = TSV.Construct({
     }).Optional(),
   }).Optional(),
 });
+
+const testSchema = TSV.Optional(TSV.String());
+type Test = TSV.Infer<typeof testSchema>;
 
 type User = TSV.Infer<typeof userSchema>;
