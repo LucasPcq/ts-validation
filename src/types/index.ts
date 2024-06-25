@@ -280,12 +280,3 @@ export namespace TSV {
       : never
     : never;
 }
-
-const nullableStringSchema = TSV.Nullable(
-  TSV.Construct({
-    name: TSV.String(),
-    age: TSV.Nullable(TSV.Number()),
-  })
-);
-
-type StringNullable = TSV.Infer<typeof nullableStringSchema>;
