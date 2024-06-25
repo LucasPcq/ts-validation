@@ -12,8 +12,7 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     /* If transpiling with TypeScript: */
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext",
+    "moduleResolution": "Bundler",
     "outDir": "dist",
     "sourceMap": true,
     /* If your code doesn't run in the DOM: */
