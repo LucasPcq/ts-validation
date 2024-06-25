@@ -17,6 +17,7 @@ Building Zod from zero to improve my expertise in TypeScript
 - [ ] Parse
 - [ ] Array
 - [ ] Min / Max / Length
+- [ ] Combine Optional and Nullable
 - [ ] Refactoring Infer Type
 
 ### Example
