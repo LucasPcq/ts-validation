@@ -11,11 +11,14 @@ export namespace TSV {
   export type TypeOptional = "optional";
   export type TypeNullable = "nullable";
 
+  export type TypeArray = "array";
+
   export type Type =
     | TypeString
     | TypeNumber
     | TypeBoolean
     | TypeObject
+    | TypeArray
     | TypeOptional
     | TypeNullable;
 
@@ -60,12 +63,29 @@ export namespace TSV {
   > = () => OptionalSchema<PrimitiveSchema<T, C>>;
 
   /**
+   * Array
+   */
+
+  export type ArraySchema<
+    S extends PrimitiveSchema<Type, C>,
+    C extends ChildrenObjectSchema = {},
+  > = BaseSchema<TypeArray> & {
+    child: S;
+  };
+
+  export type ArrayMethod<
+    T extends Type,
+    C extends ChildrenObjectSchema = {},
+  > = () => ArraySchema<PrimitiveSchema<T, C>>;
+
+  /**
    * String
    */
 
   export type StringSchema = BaseSchema<TypeString> & {
     Optional: OptionalMethod<TypeString>;
     Nullable: NullableMethod<TypeString>;
+    Array: ArrayMethod<TypeString>;
   };
 
   /**
@@ -75,6 +95,7 @@ export namespace TSV {
   export type NumberSchema = BaseSchema<TypeNumber> & {
     Optional: OptionalMethod<TypeNumber>;
     Nullable: NullableMethod<TypeNumber>;
+    Array: ArrayMethod<TypeNumber>;
   };
 
   /**
@@ -84,6 +105,7 @@ export namespace TSV {
   export type BooleanSchema = BaseSchema<TypeBoolean> & {
     Optional: OptionalMethod<TypeBoolean>;
     Nullable: NullableMethod<TypeBoolean>;
+    Array: ArrayMethod<TypeBoolean>;
   };
 
   /**
@@ -95,12 +117,14 @@ export namespace TSV {
     | PrimitiveSchema<Type>
     | OptionalSchema<PrimitiveSchema<Type>>
     | NullableSchema<PrimitiveSchema<Type>>
+    | ArraySchema<PrimitiveSchema<Type>>
   >;
 
   export type ObjectSchema<C extends ChildrenObjectSchema> =
     BaseSchema<TypeObject> & {
       Optional: OptionalMethod<TypeObject, C>;
       Nullable: NullableMethod<TypeObject, C>;
+      Array: ArrayMethod<TypeObject, C>;
       children: C;
     };
 
@@ -148,6 +172,19 @@ export namespace TSV {
   };
 
   /**
+   * Array Function
+   */
+
+  export const Array = <S extends PrimitiveSchema<Type>>(
+    schema: S,
+  ): ArraySchema<S> => {
+    return {
+      _type: "array",
+      child: schema,
+    };
+  };
+
+  /**
    * String Function
    */
 
@@ -156,6 +193,7 @@ export namespace TSV {
       _type: "string",
       Optional: () => Optional(String()),
       Nullable: () => Nullable(String()),
+      Array: () => Array(String()),
     };
   };
 
@@ -168,6 +206,7 @@ export namespace TSV {
       _type: "number",
       Optional: () => Optional(Number()),
       Nullable: () => Nullable(Number()),
+      Array: () => Array(Number()),
     };
   };
 
@@ -180,6 +219,7 @@ export namespace TSV {
       _type: "boolean",
       Optional: () => Optional(Boolean()),
       Nullable: () => Nullable(Boolean()),
+      Array: () => Array(Boolean()),
     };
   };
 
@@ -195,6 +235,7 @@ export namespace TSV {
       children,
       Optional: () => Optional(Construct(children)),
       Nullable: () => Nullable(Construct(children)),
+      Array: () => Array(Construct(children)),
     };
   };
 
@@ -206,7 +247,8 @@ export namespace TSV {
     S extends
       | PrimitiveSchema<Type>
       | OptionalSchema<PrimitiveSchema<Type>>
-      | NullableSchema<PrimitiveSchema<Type>>,
+      | NullableSchema<PrimitiveSchema<Type>>
+      | ArraySchema<PrimitiveSchema<Type>>,
   > = PrettifyInferObject<BaseInfer<S>>;
 
   export type PrettifyInferObject<O> = {
@@ -237,13 +279,16 @@ export namespace TSV {
     S extends
       | PrimitiveSchema<Type>
       | OptionalSchema<PrimitiveSchema<Type>>
-      | NullableSchema<PrimitiveSchema<Type>>,
+      | NullableSchema<PrimitiveSchema<Type>>
+      | ArraySchema<PrimitiveSchema<Type>>,
   > =
     S extends PrimitiveSchema<Type>
       ? PrimitiveInfer<S>
-      : S extends NullableSchema<infer SC>
-        ? PrimitiveInfer<SC> | null
-        : S extends OptionalSchema<infer SC>
-          ? PrimitiveInfer<SC> | undefined
-          : never;
+      : S extends ArraySchema<infer SC>
+        ? Array<PrimitiveInfer<SC>>
+        : S extends NullableSchema<infer SC>
+          ? PrimitiveInfer<SC> | null
+          : S extends OptionalSchema<infer SC>
+            ? PrimitiveInfer<SC> | undefined
+            : never;
 }

@@ -11,14 +11,12 @@ Building Zod from zero to improve my expertise in TypeScript
 - [x] Nullable
 - [x] Optional
 - [x] Infer (String, Boolean, Number, Object, Optional, Nullable)
+- [x] Array
 
 ## Todo
-
 - [ ] Parse
-- [ ] Array
 - [ ] Min / Max / Length
 - [ ] Combine Optional and Nullable
-- [ ] Refactoring Infer Type
 
 ### Example
 
