@@ -33,14 +33,14 @@ export namespace TSV {
 
   export type NullableSchema<
     S extends PrimitiveSchema<Type, C>,
-    C extends ChildrenObjectSchema = {}
+    C extends ChildrenObjectSchema = {},
   > = BaseSchema<TypeNullable> & {
     child: S;
   };
 
   export type NullableMethod<
     T extends Type,
-    C extends ChildrenObjectSchema = {}
+    C extends ChildrenObjectSchema = {},
   > = () => NullableSchema<PrimitiveSchema<T, C>>;
 
   /**
@@ -49,14 +49,14 @@ export namespace TSV {
 
   export type OptionalSchema<
     S extends PrimitiveSchema<Type, C>,
-    C extends ChildrenObjectSchema = {}
+    C extends ChildrenObjectSchema = {},
   > = BaseSchema<TypeOptional> & {
     child: S;
   };
 
   export type OptionalMethod<
     T extends Type,
-    C extends ChildrenObjectSchema = {}
+    C extends ChildrenObjectSchema = {},
   > = () => OptionalSchema<PrimitiveSchema<T, C>>;
 
   /**
@@ -110,23 +110,23 @@ export namespace TSV {
 
   export type PrimitiveSchema<
     T extends Type,
-    C extends ChildrenObjectSchema = {}
+    C extends ChildrenObjectSchema = {},
   > = T extends TypeString
     ? StringSchema
     : T extends TypeNumber
-    ? NumberSchema
-    : T extends TypeBoolean
-    ? BooleanSchema
-    : T extends TypeObject
-    ? ObjectSchema<C>
-    : never;
+      ? NumberSchema
+      : T extends TypeBoolean
+        ? BooleanSchema
+        : T extends TypeObject
+          ? ObjectSchema<C>
+          : never;
 
   /**
    *  Nullable Function
    */
 
   export const Nullable = <S extends PrimitiveSchema<Type>>(
-    schema: S
+    schema: S,
   ): NullableSchema<S> => {
     return {
       _type: "nullable",
@@ -139,7 +139,7 @@ export namespace TSV {
    */
 
   export const Optional = <S extends PrimitiveSchema<Type>>(
-    schema: S
+    schema: S,
   ): OptionalSchema<S> => {
     return {
       _type: "optional",
@@ -188,7 +188,7 @@ export namespace TSV {
    */
 
   export const Construct = <C extends ChildrenObjectSchema>(
-    children: C
+    children: C,
   ): PrimitiveSchema<TypeObject, C> => {
     return {
       _type: "object",
@@ -206,66 +206,21 @@ export namespace TSV {
     S extends
       | PrimitiveSchema<Type>
       | OptionalSchema<PrimitiveSchema<Type>>
-      | NullableSchema<PrimitiveSchema<Type>>
+      | NullableSchema<PrimitiveSchema<Type>>,
   > = PrettifyInferObject<BaseInfer<S>>;
 
   export type PrettifyInferObject<O> = {
     [K in keyof O]: O[K];
   } & {};
 
-  export type BaseInfer<
-    S extends
-      | PrimitiveSchema<Type>
-      | OptionalSchema<PrimitiveSchema<Type>>
-      | NullableSchema<PrimitiveSchema<Type>>
-  > = S extends StringSchema
+  type PrimitiveInfer<S extends PrimitiveSchema<Type>> = S extends StringSchema
     ? string
     : S extends NumberSchema
-    ? number
-    : S extends BooleanSchema
-    ? boolean
-    : S extends ObjectSchema<infer C>
-    ? PrettifyInferObject<
-        {
-          [K in keyof C as C[K] extends OptionalSchema<infer T>
-            ? never
-            : K]: BaseInfer<C[K]>;
-        } & {
-          [K in keyof C as C[K] extends OptionalSchema<infer T>
-            ? K
-            : never]?: BaseInfer<C[K]>;
-        }
-      >
-    : S extends NullableSchema<infer SC>
-    ? SC extends StringSchema
-      ? string | null
-      : SC extends NumberSchema
-      ? number | null
-      : SC extends BooleanSchema
-      ? boolean | null
-      : SC extends ObjectSchema<infer C>
-      ? PrettifyInferObject<
-          {
-            [K in keyof C as C[K] extends OptionalSchema<infer T>
-              ? never
-              : K]: BaseInfer<C[K]>;
-          } & {
-            [K in keyof C as C[K] extends OptionalSchema<infer T>
-              ? K
-              : never]?: BaseInfer<C[K]>;
-          }
-        > | null
-      : never
-    : S extends OptionalSchema<infer SC>
-    ? SC extends StringSchema
-      ? string | undefined
-      : SC extends NumberSchema
-      ? number | undefined
-      : SC extends BooleanSchema
-      ? boolean | undefined
-      : SC extends ObjectSchema<infer C>
-      ?
-          | PrettifyInferObject<
+      ? number
+      : S extends BooleanSchema
+        ? boolean
+        : S extends ObjectSchema<infer C>
+          ? PrettifyInferObject<
               {
                 [K in keyof C as C[K] extends OptionalSchema<infer T>
                   ? never
@@ -276,7 +231,19 @@ export namespace TSV {
                   : never]?: BaseInfer<C[K]>;
               }
             >
-          | undefined
-      : never
-    : never;
+          : never;
+
+  export type BaseInfer<
+    S extends
+      | PrimitiveSchema<Type>
+      | OptionalSchema<PrimitiveSchema<Type>>
+      | NullableSchema<PrimitiveSchema<Type>>,
+  > =
+    S extends PrimitiveSchema<Type>
+      ? PrimitiveInfer<S>
+      : S extends NullableSchema<infer SC>
+        ? PrimitiveInfer<SC> | null
+        : S extends OptionalSchema<infer SC>
+          ? PrimitiveInfer<SC> | undefined
+          : never;
 }
