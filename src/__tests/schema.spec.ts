@@ -6,11 +6,11 @@ describe("Schema", () => {
   describe("String", () => {
     describe("Parse Method", () => {
       it("Should throw an error when the variable isnt a string", () => {
-        const stringSchema = TSV.String();
+        const stringSchema = TSV.string();
         expect(() => stringSchema.parse(12)).toThrow();
       });
       it("Should return the string when the variable is a string", () => {
-        const stringSchema = TSV.String();
+        const stringSchema = TSV.string();
         expect(stringSchema.parse("12")).toBeTypeOf("string");
         expect(stringSchema.parse("12")).toBe("12");
       });
@@ -19,11 +19,11 @@ describe("Schema", () => {
   describe("Number", () => {
     describe("Parse Method", () => {
       it("Should throw an error when the variable isnt a number", () => {
-        const numberSchema = TSV.Number();
+        const numberSchema = TSV.number();
         expect(() => numberSchema.parse("12")).toThrow();
       });
       it("Should return the number when the variable is a number", () => {
-        const numberSchema = TSV.Number();
+        const numberSchema = TSV.number();
         expect(numberSchema.parse(12)).toBeTypeOf("number");
         expect(numberSchema.parse(12)).toBe(12);
       });
@@ -32,11 +32,11 @@ describe("Schema", () => {
   describe("Boolean", () => {
     describe("Parse Method", () => {
       it("Should throw an error when the variable isnt a boolean", () => {
-        const booleanSchema = TSV.Boolean();
+        const booleanSchema = TSV.boolean();
         expect(() => booleanSchema.parse("true")).toThrow();
       });
       it("Should return the boolean when the variable is a boolean", () => {
-        const booleanSchema = TSV.Boolean();
+        const booleanSchema = TSV.boolean();
         expect(booleanSchema.parse(true)).toBeTypeOf("boolean");
         expect(booleanSchema.parse(true)).toBe(true);
       });

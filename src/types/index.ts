@@ -1,5 +1,7 @@
 import { TSValidationError } from "../error/error";
 
+import { PrettifyObject } from "../utils";
+
 export namespace TSV {
   /**
    * Types
@@ -41,6 +43,7 @@ export namespace TSV {
     C extends ChildrenObjectSchema = {},
   > = BaseSchema<TypeNullable> & {
     child: S;
+    parse: (data: unknown) => Infer<S> | null;
   };
 
   export type NullableMethod<
@@ -57,6 +60,7 @@ export namespace TSV {
     C extends ChildrenObjectSchema = {},
   > = BaseSchema<TypeOptional> & {
     child: S;
+    parse: (data: unknown) => Infer<S> | undefined;
   };
 
   export type OptionalMethod<
@@ -73,6 +77,7 @@ export namespace TSV {
     C extends ChildrenObjectSchema = {},
   > = BaseSchema<TypeArray> & {
     child: S;
+    parse: (data: unknown) => Array<Infer<S>>;
   };
 
   export type ArrayMethod<
@@ -85,10 +90,10 @@ export namespace TSV {
    */
 
   export type StringSchema = BaseSchema<TypeString> & {
-    Optional: OptionalMethod<TypeString>;
-    Nullable: NullableMethod<TypeString>;
-    Array: ArrayMethod<TypeString>;
-    parse: (data: unknown) => string;
+    optional: OptionalMethod<TypeString>;
+    nullable: NullableMethod<TypeString>;
+    array: ArrayMethod<TypeString>;
+    parse: (data: unknown) => Infer<PrimitiveSchema<TypeString>>;
   };
 
   /**
@@ -96,10 +101,10 @@ export namespace TSV {
    */
 
   export type NumberSchema = BaseSchema<TypeNumber> & {
-    Optional: OptionalMethod<TypeNumber>;
-    Nullable: NullableMethod<TypeNumber>;
-    Array: ArrayMethod<TypeNumber>;
-    parse: (data: unknown) => number;
+    optional: OptionalMethod<TypeNumber>;
+    nullable: NullableMethod<TypeNumber>;
+    array: ArrayMethod<TypeNumber>;
+    parse: (data: unknown) => Infer<PrimitiveSchema<TypeNumber>>;
   };
 
   /**
@@ -107,10 +112,10 @@ export namespace TSV {
    */
 
   export type BooleanSchema = BaseSchema<TypeBoolean> & {
-    Optional: OptionalMethod<TypeBoolean>;
-    Nullable: NullableMethod<TypeBoolean>;
-    Array: ArrayMethod<TypeBoolean>;
-    parse: (data: unknown) => boolean;
+    optional: OptionalMethod<TypeBoolean>;
+    nullable: NullableMethod<TypeBoolean>;
+    array: ArrayMethod<TypeBoolean>;
+    parse: (data: unknown) => Infer<PrimitiveSchema<TypeBoolean>>;
   };
 
   /**
@@ -127,10 +132,11 @@ export namespace TSV {
 
   export type ObjectSchema<C extends ChildrenObjectSchema> =
     BaseSchema<TypeObject> & {
-      Optional: OptionalMethod<TypeObject, C>;
-      Nullable: NullableMethod<TypeObject, C>;
-      Array: ArrayMethod<TypeObject, C>;
       children: C;
+      optional: OptionalMethod<TypeObject, C>;
+      nullable: NullableMethod<TypeObject, C>;
+      array: ArrayMethod<TypeObject, C>;
+      parse: (data: unknown) => {};
     };
 
   /**
@@ -154,12 +160,19 @@ export namespace TSV {
    *  Nullable Function
    */
 
-  export const Nullable = <S extends PrimitiveSchema<Type>>(
+  export const nullable = <S extends PrimitiveSchema<Type>>(
     schema: S,
   ): NullableSchema<S> => {
     return {
       _type: "nullable",
       child: schema,
+      parse: (data) => {
+        if (data !== null) {
+          throw new TSValidationError([]);
+        }
+
+        return data;
+      },
     };
   };
 
@@ -167,12 +180,19 @@ export namespace TSV {
    * Optional Function
    */
 
-  export const Optional = <S extends PrimitiveSchema<Type>>(
+  export const optional = <S extends PrimitiveSchema<Type>>(
     schema: S,
   ): OptionalSchema<S> => {
     return {
       _type: "optional",
       child: schema,
+      parse: (data) => {
+        if (data !== undefined) {
+          throw new TSValidationError([]);
+        }
+
+        return data;
+      },
     };
   };
 
@@ -180,12 +200,19 @@ export namespace TSV {
    * Array Function
    */
 
-  export const Array = <S extends PrimitiveSchema<Type>>(
+  export const array = <S extends PrimitiveSchema<Type>>(
     schema: S,
   ): ArraySchema<S> => {
     return {
       _type: "array",
       child: schema,
+      parse: (data) => {
+        if (!Array.isArray(data)) {
+          throw new TSValidationError([]);
+        }
+
+        return data;
+      },
     };
   };
 
@@ -193,12 +220,12 @@ export namespace TSV {
    * String Function
    */
 
-  export const String = (): StringSchema => {
+  export const string = (): StringSchema => {
     return {
       _type: "string",
-      Optional: () => Optional(String()),
-      Nullable: () => Nullable(String()),
-      Array: () => Array(String()),
+      optional: () => optional(string()),
+      nullable: () => nullable(string()),
+      array: () => array(string()),
       parse: (data) => {
         if (typeof data !== "string") {
           throw new TSValidationError([
@@ -219,12 +246,12 @@ export namespace TSV {
    * Number Function
    */
 
-  export const Number = (): NumberSchema => {
+  export const number = (): NumberSchema => {
     return {
       _type: "number",
-      Optional: () => Optional(Number()),
-      Nullable: () => Nullable(Number()),
-      Array: () => Array(Number()),
+      optional: () => optional(number()),
+      nullable: () => nullable(number()),
+      array: () => array(number()),
       parse: (data) => {
         if (typeof data !== "number") {
           throw new TSValidationError([
@@ -245,12 +272,12 @@ export namespace TSV {
    * Boolean Function
    */
 
-  export const Boolean = (): BooleanSchema => {
+  export const boolean = (): BooleanSchema => {
     return {
       _type: "boolean",
-      Optional: () => Optional(Boolean()),
-      Nullable: () => Nullable(Boolean()),
-      Array: () => Array(Boolean()),
+      optional: () => optional(boolean()),
+      nullable: () => nullable(boolean()),
+      array: () => array(boolean()),
       parse: (data) => {
         if (typeof data !== "boolean") {
           throw new TSValidationError([
@@ -271,15 +298,15 @@ export namespace TSV {
    * Object Function
    */
 
-  export const Construct = <C extends ChildrenObjectSchema>(
+  export const construct = <C extends ChildrenObjectSchema>(
     children: C,
   ): PrimitiveSchema<TypeObject, C> => {
     return {
       _type: "object",
       children,
-      Optional: () => Optional(Construct(children)),
-      Nullable: () => Nullable(Construct(children)),
-      Array: () => Array(Construct(children)),
+      optional: () => optional(construct(children)),
+      nullable: () => nullable(construct(children)),
+      array: () => array(construct(children)),
     };
   };
 
@@ -293,39 +320,7 @@ export namespace TSV {
       | OptionalSchema<PrimitiveSchema<Type>>
       | NullableSchema<PrimitiveSchema<Type>>
       | ArraySchema<PrimitiveSchema<Type>>,
-  > = PrettifyInferObject<BaseInfer<S>>;
-
-  export type PrettifyInferObject<O> = {
-    [K in keyof O]: O[K];
-  } & {};
-
-  type PrimitiveInfer<S extends PrimitiveSchema<Type>> = S extends StringSchema
-    ? string
-    : S extends NumberSchema
-      ? number
-      : S extends BooleanSchema
-        ? boolean
-        : S extends ObjectSchema<infer C>
-          ? PrettifyInferObject<
-              {
-                [K in keyof C as C[K] extends OptionalSchema<infer T>
-                  ? never
-                  : K]: BaseInfer<C[K]>;
-              } & {
-                [K in keyof C as C[K] extends OptionalSchema<infer T>
-                  ? K
-                  : never]?: BaseInfer<C[K]>;
-              }
-            >
-          : never;
-
-  export type BaseInfer<
-    S extends
-      | PrimitiveSchema<Type>
-      | OptionalSchema<PrimitiveSchema<Type>>
-      | NullableSchema<PrimitiveSchema<Type>>
-      | ArraySchema<PrimitiveSchema<Type>>,
-  > =
+  > = PrettifyObject<
     S extends PrimitiveSchema<Type>
       ? PrimitiveInfer<S>
       : S extends ArraySchema<infer SC>
@@ -334,5 +329,24 @@ export namespace TSV {
           ? PrimitiveInfer<SC> | null
           : S extends OptionalSchema<infer SC>
             ? PrimitiveInfer<SC> | undefined
-            : never;
+            : never
+  >;
+
+  type PrimitiveInfer<S extends PrimitiveSchema<Type>> = S extends StringSchema
+    ? string
+    : S extends NumberSchema
+      ? number
+      : S extends BooleanSchema
+        ? boolean
+        : S extends ObjectSchema<infer C>
+          ? {
+              [K in keyof C as C[K] extends OptionalSchema<infer T>
+                ? never
+                : K]: Infer<C[K]>;
+            } & {
+              [K in keyof C as C[K] extends OptionalSchema<infer T>
+                ? K
+                : never]?: Infer<C[K]>;
+            }
+          : never;
 }

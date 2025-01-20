@@ -4,15 +4,15 @@ import { TSV } from "./types/index";
  * Définition du schéma de l'utilisateur
  */
 
-const demoUserSchema = TSV.Construct({
-  ids: TSV.Array(TSV.String()),
-  name: TSV.String(),
-  age: TSV.Nullable(TSV.Number()),
-  isSubscribed: TSV.Optional(TSV.Boolean()),
-  address: TSV.Construct({
-    street: TSV.String(),
-    city: TSV.String(),
-    country: TSV.String(),
+const demoUserSchema = TSV.construct({
+  ids: TSV.array(TSV.string()),
+  name: TSV.string(),
+  age: TSV.nullable(TSV.number()),
+  isSubscribed: TSV.optional(TSV.boolean()),
+  address: TSV.construct({
+    street: TSV.string(),
+    city: TSV.string(),
+    country: TSV.string(),
   }).Optional(),
 });
 
@@ -38,3 +38,10 @@ type DemoUser = TSV.Infer<typeof demoUserSchema>;
  * }
  *
  */
+
+/**
+ * Méthode de parse
+ */
+
+const demoSchemaToParse = TSV.string().nullable();
+const demoParse = demoSchemaToParse.parse("data");
