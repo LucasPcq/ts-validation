@@ -11,10 +11,8 @@ export namespace TSV {
   export type TypeNumber = "number";
   export type TypeBoolean = "boolean";
   export type TypeObject = "object";
-
   export type TypeOptional = "optional";
   export type TypeNullable = "nullable";
-
   export type TypeArray = "array";
 
   export type Type =
@@ -136,7 +134,7 @@ export namespace TSV {
       optional: OptionalMethod<TypeObject, C>;
       nullable: NullableMethod<TypeObject, C>;
       array: ArrayMethod<TypeObject, C>;
-      parse: (data: unknown) => {};
+      parse: (data: unknown) => PrettifyObject<ObjectInfer<C>>;
     };
 
   /**
@@ -307,6 +305,34 @@ export namespace TSV {
       optional: () => optional(construct(children)),
       nullable: () => nullable(construct(children)),
       array: () => array(construct(children)),
+      parse: (data) => {
+        if (typeof data !== "object") {
+          throw new TSValidationError([]);
+        }
+
+        if (data === null) {
+          throw new TSValidationError([]);
+        }
+
+        const childrenKeys = Object.keys(children);
+        const dataKeys = Object.keys(data);
+
+        if (!childrenKeys.every((childKey) => dataKeys.includes(childKey))) {
+          throw new TSValidationError([]);
+        }
+
+        if (childrenKeys.length !== dataKeys.length) {
+          throw new TSValidationError([]);
+        }
+
+        const constructTyped: Record<string, any> = data;
+
+        for (const childKey in children) {
+          children[childKey]?.parse(constructTyped[childKey]);
+        }
+
+        return constructTyped as ObjectInfer<C>;
+      },
     };
   };
 
@@ -339,14 +365,16 @@ export namespace TSV {
       : S extends BooleanSchema
         ? boolean
         : S extends ObjectSchema<infer C>
-          ? {
-              [K in keyof C as C[K] extends OptionalSchema<infer T>
-                ? never
-                : K]: Infer<C[K]>;
-            } & {
-              [K in keyof C as C[K] extends OptionalSchema<infer T>
-                ? K
-                : never]?: Infer<C[K]>;
-            }
+          ? ObjectInfer<C>
           : never;
+
+  type ObjectInfer<C extends ChildrenObjectSchema> = {
+    [K in keyof C as C[K] extends OptionalSchema<infer T> ? never : K]: Infer<
+      C[K]
+    >;
+  } & {
+    [K in keyof C as C[K] extends OptionalSchema<infer T> ? K : never]?: Infer<
+      C[K]
+    >;
+  };
 }

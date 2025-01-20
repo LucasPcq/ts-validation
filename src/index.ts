@@ -13,7 +13,7 @@ const demoUserSchema = TSV.construct({
     street: TSV.string(),
     city: TSV.string(),
     country: TSV.string(),
-  }).Optional(),
+  }).optional(),
 });
 
 /**
@@ -38,10 +38,3 @@ type DemoUser = TSV.Infer<typeof demoUserSchema>;
  * }
  *
  */
-
-/**
- * Méthode de parse
- */
-
-const demoSchemaToParse = TSV.string().nullable();
-const demoParse = demoSchemaToParse.parse("data");

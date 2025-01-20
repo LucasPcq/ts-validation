@@ -42,4 +42,44 @@ describe("Schema", () => {
       });
     });
   });
+  describe("Construct", () => {
+    describe("Parse Method", () => {
+      it("Should throw an error when the variable isnt an object", () => {
+        const constructSchema = TSV.construct({
+          name: TSV.string(),
+          postalCode: TSV.number(),
+          adress: TSV.construct({
+            city: TSV.string(),
+          }),
+        });
+
+        expect(() =>
+          constructSchema.parse({
+            name: "12",
+            postalCode: 12,
+            adress: {
+              city: 12,
+            },
+          }),
+        ).toThrow();
+      });
+      it("Should return the object when the variable is an object of correct format", () => {
+        const constructSchema = TSV.construct({
+          name: TSV.string(),
+          postalCode: TSV.number(),
+        });
+
+        expect(
+          constructSchema.parse({ name: "12", postalCode: 12 }),
+        ).toBeTypeOf("object");
+
+        expect(
+          constructSchema.parse({ name: "12", postalCode: 12 }),
+        ).toStrictEqual({
+          name: "12",
+          postalCode: 12,
+        });
+      });
+    });
+  });
 });
