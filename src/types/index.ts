@@ -134,7 +134,7 @@ export namespace TSV {
       optional: OptionalMethod<TypeObject, C>;
       nullable: NullableMethod<TypeObject, C>;
       array: ArrayMethod<TypeObject, C>;
-      parse: (data: unknown) => PrettifyObject<ObjectInfer<C>>;
+      parse: (data: unknown) => ObjectInfer<C>;
     };
 
   /**
@@ -368,13 +368,15 @@ export namespace TSV {
           ? ObjectInfer<C>
           : never;
 
-  type ObjectInfer<C extends ChildrenObjectSchema> = {
-    [K in keyof C as C[K] extends OptionalSchema<infer T> ? never : K]: Infer<
-      C[K]
-    >;
-  } & {
-    [K in keyof C as C[K] extends OptionalSchema<infer T> ? K : never]?: Infer<
-      C[K]
-    >;
-  };
+  type ObjectInfer<C extends ChildrenObjectSchema> = PrettifyObject<
+    {
+      [K in keyof C as C[K] extends OptionalSchema<infer T> ? never : K]: Infer<
+        C[K]
+      >;
+    } & {
+      [K in keyof C as C[K] extends OptionalSchema<infer T>
+        ? K
+        : never]?: Infer<C[K]>;
+    }
+  >;
 }

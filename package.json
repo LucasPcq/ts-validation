@@ -8,7 +8,7 @@
     "dev:tsc": "tsc --watch --preserveWatchOutput",
     "dev:node": "node --enable-source-maps --watch dist/index.js",
     "dev": "pnpm run \"/dev:/\"",
-    "test": "vitest"
+    "test": "vitest --typecheck"
   },
   "keywords": [],
   "author": "",
