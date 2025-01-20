@@ -1,3 +1,5 @@
+import { TSValidationError } from "../error/error";
+
 export namespace TSV {
   /**
    * Types
@@ -86,6 +88,7 @@ export namespace TSV {
     Optional: OptionalMethod<TypeString>;
     Nullable: NullableMethod<TypeString>;
     Array: ArrayMethod<TypeString>;
+    parse: (data: unknown) => string;
   };
 
   /**
@@ -96,6 +99,7 @@ export namespace TSV {
     Optional: OptionalMethod<TypeNumber>;
     Nullable: NullableMethod<TypeNumber>;
     Array: ArrayMethod<TypeNumber>;
+    parse: (data: unknown) => number;
   };
 
   /**
@@ -106,6 +110,7 @@ export namespace TSV {
     Optional: OptionalMethod<TypeBoolean>;
     Nullable: NullableMethod<TypeBoolean>;
     Array: ArrayMethod<TypeBoolean>;
+    parse: (data: unknown) => boolean;
   };
 
   /**
@@ -194,6 +199,19 @@ export namespace TSV {
       Optional: () => Optional(String()),
       Nullable: () => Nullable(String()),
       Array: () => Array(String()),
+      parse: (data) => {
+        if (typeof data !== "string") {
+          throw new TSValidationError([
+            {
+              code: "invalid_type",
+              expected: "string",
+              received: typeof data,
+            },
+          ]);
+        }
+
+        return data;
+      },
     };
   };
 
@@ -207,6 +225,19 @@ export namespace TSV {
       Optional: () => Optional(Number()),
       Nullable: () => Nullable(Number()),
       Array: () => Array(Number()),
+      parse: (data) => {
+        if (typeof data !== "number") {
+          throw new TSValidationError([
+            {
+              code: "invalid_type",
+              expected: "number",
+              received: typeof data,
+            },
+          ]);
+        }
+
+        return data;
+      },
     };
   };
 
@@ -220,6 +251,19 @@ export namespace TSV {
       Optional: () => Optional(Boolean()),
       Nullable: () => Nullable(Boolean()),
       Array: () => Array(Boolean()),
+      parse: (data) => {
+        if (typeof data !== "boolean") {
+          throw new TSValidationError([
+            {
+              code: "invalid_type",
+              expected: "boolean",
+              received: typeof data,
+            },
+          ]);
+        }
+
+        return data;
+      },
     };
   };
 

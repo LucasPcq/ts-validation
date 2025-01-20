@@ -7,7 +7,8 @@
     "build": "tsc",
     "dev:tsc": "tsc --watch --preserveWatchOutput",
     "dev:node": "node --enable-source-maps --watch dist/index.js",
-    "dev": "pnpm run \"/dev:/\""
+    "dev": "pnpm run \"/dev:/\"",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
     "typescript": "^5.7.3"
   },
   "devDependencies": {
-    "@types/node": "^20.17.14"
+    "@types/node": "^20.17.14",
+    "vitest": "^3.0.2"
   }
 }

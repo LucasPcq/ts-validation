@@ -10,13 +10,13 @@ Building Zod from zero to improve my expertise in TypeScript
 - [x] Object (w/ Optional & Nullable)
 - [x] Nullable
 - [x] Optional
-- [x] Infer (String, Boolean, Number, Object, Optional, Nullable)
+- [x] Infer (String, Boolean, Number, Object, Optional, Nullable, Arrray)
 - [x] Array
 
 ## Todo
 - [ ] Parse
 - [ ] Min / Max / Length
-- [ ] Combine Optional and Nullable
+- [ ] Combine Optional / Nullable / Array
 
 ### Example
 
@@ -26,6 +26,7 @@ Building Zod from zero to improve my expertise in TypeScript
  */
 
 const demoUserSchema = TSV.Construct({
+  ids: TSV.Array(TSV.String())
   name: TSV.String(),
   age: TSV.Nullable(TSV.Number()),
   isSubscribed: TSV.Optional(TSV.Boolean()),
@@ -46,6 +47,7 @@ type DemoUser = TSV.Infer<typeof demoUserSchema>;
  * Format du type infer depuis le schéma
  *
  * type DemoUser = {
+ *  ids: string[]
  *  name: string;
  *  age: number | null;
  *  isSubscribed?: boolean | undefined;
