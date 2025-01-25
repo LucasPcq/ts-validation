@@ -125,4 +125,45 @@ describe("Infer Schema", () => {
       >;
     });
   });
+  describe("Construct", () => {
+    it("Should be a {} when infer schema construct", () => {
+      const constructSchema = TSV.construct({});
+      type ConstructSchemaInfer = TSV.Infer<typeof constructSchema>;
+      type ResultConstructSchemaInfer = Expect<Equal<ConstructSchemaInfer, {}>>;
+    });
+    it("Should be an object with properties when infer schema construct", () => {
+      const constructSchema = TSV.construct({
+        name: TSV.string(),
+      });
+      type ConstructSchemaInfer = TSV.Infer<typeof constructSchema>;
+      type ResultConstructSchemaInfer = Expect<
+        Equal<ConstructSchemaInfer, { name: string }>
+      >;
+    });
+    it("Should be an object with properties sub object when infer schema construct", () => {
+      const constructSchema = TSV.construct({
+        name: TSV.string(),
+        address: TSV.construct({
+          city: TSV.string(),
+          country: TSV.string(),
+        }),
+      });
+      type ConstructSchemaInfer = TSV.Infer<typeof constructSchema>;
+      type ResultConstructSchemaInfer = Expect<
+        Equal<
+          ConstructSchemaInfer,
+          { name: string; address: { city: string; country: string } }
+        >
+      >;
+    });
+    it("Should be a optional key when infer schema construct with property optional", () => {
+      const constructSchema = TSV.construct({
+        name: TSV.string().optional(),
+      });
+      type ConstructSchemaInfer = TSV.Infer<typeof constructSchema>;
+      type ResultOptionalConstructSchemaInfer = Expect<
+        Equal<ConstructSchemaInfer, { name?: string }>
+      >;
+    });
+  });
 });
